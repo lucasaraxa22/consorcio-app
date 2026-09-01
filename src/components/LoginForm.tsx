@@ -3,17 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "@/lib/authContext";
 
 export default function LoginForm() {
-  const [email, setEmail] = useState("");
+  const [cpf, setCpf] = useState("");
   const [senha, setSenha] = useState("");
   const [modo, setModo] = useState<"login" | "registro">("login");
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [cpf, setCpf] = useState("");
   const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
 
   const router = useRouter();
+  const { login, registrar } = useAuth();
 
   function formatarCPF(valor: string) {
     const apenasNumeros = valor.replace(/\D/g, "");
@@ -39,8 +41,13 @@ export default function LoginForm() {
     setCarregando(true);
 
     try {
-      if (!email.trim()) {
-        setErro("E-mail é obrigatório.");
+      if (!cpf.trim()) {
+        setErro("CPF é obrigatório.");
+        setCarregando(false);
+        return;
+      }
+      if (!validarCPF(cpf)) {
+        setErro("CPF inválido.");
         setCarregando(false);
         return;
       }
@@ -50,17 +57,7 @@ export default function LoginForm() {
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: senha,
-      });
-
-      if (error) {
-        setErro(error.message || "Erro ao fazer login");
-        setCarregando(false);
-        return;
-      }
-
+      await login(cpf.replace(/\D/g, ""), senha);
       router.push("/leads");
     } catch (err: any) {
       setErro(err.message || "Erro ao fazer login");
@@ -105,31 +102,7 @@ export default function LoginForm() {
         return;
       }
 
-      // 1. Cria conta no Auth
-      const { error: authError } = await supabase.auth.signUp({
-        email,
-        password: senha,
-      });
-
-      if (authError) {
-        setErro(authError.message || "Erro ao registrar");
-        setCarregando(false);
-        return;
-      }
-
-      // 2. Cria registro na tabela usuarios
-      const apenasNumeros = cpf.replace(/\D/g, "");
-      const { error: dbError } = await supabase.from("usuarios").insert({
-        cpf: apenasNumeros,
-        nome: nome.trim(),
-        email: email.trim().toLowerCase(),
-      });
-
-      if (dbError) {
-        setErro(dbError.message || "Erro ao salvar usuário");
-        setCarregando(false);
-        return;
-      }
+      await registrar(cpf.replace(/\D/g, ""), nome, email, senha);
 
       // Sucesso - volta para login
       setModo("login");
@@ -192,14 +165,15 @@ export default function LoginForm() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  E-mail
+                  CPF
                 </label>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="text"
+                  value={cpf}
+                  onChange={(e) => formatarCPF(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#16233B]"
-                  placeholder="seu@email.com"
+                  placeholder="000.000.000-00"
+                  maxLength={14}
                 />
               </div>
 

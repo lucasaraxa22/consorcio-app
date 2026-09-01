@@ -1,17 +1,14 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "./supabaseClient";
+import { useAuth } from "./authContext";
 
 export function useRequireAuth() {
   const router = useRouter();
+  const { cpf, carregando } = useAuth();
 
   useEffect(() => {
-    async function checkAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        router.push("/auth/login");
-      }
+    if (!carregando && !cpf) {
+      router.push("/auth/login");
     }
-    checkAuth();
-  }, [router]);
+  }, [router, cpf, carregando]);
 }

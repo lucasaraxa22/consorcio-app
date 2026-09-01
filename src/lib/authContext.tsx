@@ -3,12 +3,13 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "./supabaseClient";
 import { User } from "./types";
+import crypto from "crypto";
 
 interface AuthContextType {
   usuarioLogado: User | null;
-  email: string | null;
+  cpf: string | null;
   carregando: boolean;
-  login: (email: string, senha: string) => Promise<void>;
+  login: (cpf: string, senha: string) => Promise<void>;
   logout: () => Promise<void>;
   registrar: (cpf: string, nome: string, email: string, senha: string) => Promise<void>;
 }
@@ -17,37 +18,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuarioLogado, setUsuarioLogado] = useState<User | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
+  const [cpf, setCpf] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
+
+  const hashPassword = (senha: string): string => {
+    return crypto.createHash("sha256").update(senha).digest("hex");
+  };
 
   // Verifica autenticação ao montar
   useEffect(() => {
     checkAuth();
-    
-    // Escuta mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (session?.user) {
-          setEmail(session.user.email || null);
-          carregarUsuario(session.user.email);
-        } else {
-          setEmail(null);
-          setUsuarioLogado(null);
-        }
-      }
-    );
-
-    return () => {
-      subscription?.unsubscribe();
-    };
   }, []);
 
   async function checkAuth() {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user.email) {
-        setEmail(session.user.email);
-        await carregarUsuario(session.user.email);
+      const storedCPF = localStorage.getItem("usuario_cpf");
+      if (storedCPF) {
+        setCpf(storedCPF);
+        await carregarUsuario(storedCPF);
       }
     } catch (error) {
       console.error("Erro ao verificar autenticação:", error);
@@ -56,12 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function carregarUsuario(userEmail: string) {
+  async function carregarUsuario(userCPF: string) {
     try {
       const { data, error } = await supabase
         .from("usuarios")
         .select("*")
-        .eq("email", userEmail)
+        .eq("cpf", userCPF)
         .single();
 
       if (!error && data) {
@@ -72,40 +60,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function login(emailLogin: string, senha: string) {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: emailLogin,
-      password: senha,
-    });
+  async function login(cpfLogin: string, senha: string) {
+    // Query o usuário pela CPF
+    const { data: usuario, error } = await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("cpf", cpfLogin)
+      .single();
 
-    if (error) {
-      throw new Error(error.message);
+    if (error || !usuario) {
+      throw new Error("CPF não encontrado");
     }
+
+    // Hash a senha enviada
+    const senhaHash = hashPassword(senha);
+
+    // Compara com a senha armazenada
+    if (usuario.senha !== senhaHash) {
+      throw new Error("Senha incorreta");
+    }
+
+    // Autenticação bem-sucedida
+    localStorage.setItem("usuario_cpf", cpfLogin);
+    setCpf(cpfLogin);
+    setUsuarioLogado(usuario as User);
   }
 
   async function logout() {
-    await supabase.auth.signOut();
+    localStorage.removeItem("usuario_cpf");
     setUsuarioLogado(null);
-    setEmail(null);
+    setCpf(null);
   }
 
   async function registrar(cpf: string, nome: string, emailRegistro: string, senha: string) {
-    // 1. Cria a conta no Auth do Supabase
-    const { error: authError } = await supabase.auth.signUp({
-      email: emailRegistro,
-      password: senha,
-    });
+    // Hash da senha
+    const senhaHash = hashPassword(senha);
 
-    if (authError) {
-      throw new Error(authError.message);
-    }
-
-    // 2. Cria o registro na tabela usuarios
-    const apenasNumeros = cpf.replace(/\D/g, "");
+    // Cria o registro na tabela usuarios com a senha hashada
     const { error: dbError } = await supabase.from("usuarios").insert({
-      cpf: apenasNumeros,
+      cpf: cpf,
       nome: nome.trim(),
       email: emailRegistro.trim().toLowerCase(),
+      senha: senhaHash,
     });
 
     if (dbError) {
@@ -117,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         usuarioLogado,
-        email,
+        cpf,
         carregando,
         login,
         logout,

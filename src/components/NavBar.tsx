@@ -14,7 +14,7 @@ const ITENS = [
 
 export default function NavBar() {
   const pathname = usePathname();
-  const { email, logout } = useAuth();
+  const { cpf, logout, usuarioLogado } = useAuth();
   const [descricaoAberta, setDescricaoAberta] = useState(false);
 
   // Não mostra NavBar na página de login
@@ -23,13 +23,16 @@ export default function NavBar() {
   }
 
   // Se não está logado, não mostra
-  if (!email) {
+  if (!cpf) {
     return null;
   }
 
   async function handleLogout() {
     await logout();
   }
+
+  const cpfFormatado = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+  const nomeUsuario = usuarioLogado?.nome || "Usuário";
 
   return (
     <>
@@ -55,7 +58,11 @@ export default function NavBar() {
             ))}
           </nav>
           <div className="border-l border-white/20 pl-8 flex items-center gap-4">
-            <span className="text-sm text-white/70">{email}</span>
+            <div className="flex flex-col text-right">
+              <span className="text-xs text-white/50">Conectado como</span>
+              <span className="text-sm text-white/70">{nomeUsuario}</span>
+              <span className="text-xs text-white/50">{cpfFormatado}</span>
+            </div>
             <button
               onClick={handleLogout}
               className="px-3 py-1.5 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition"

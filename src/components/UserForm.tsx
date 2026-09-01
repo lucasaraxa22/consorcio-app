@@ -134,7 +134,7 @@ export default function UserForm({ onCreated }: UserFormProps) {
             onChange={(e) => formatarCPF(e.target.value)}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#16233B]"
             placeholder="000.000.000-00"
-            maxLength="14"
+            maxLength={14}
           />
           <p className="text-xs text-slate-500 mt-1">
             Formato: XXX.XXX.XXX-XX

@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "./supabaseClient";
 import { User } from "./types";
-import crypto from "crypto";
 
 interface AuthContextType {
   usuarioLogado: User | null;
@@ -21,47 +20,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [cpf, setCpf] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
 
-  const hashPassword = (senha: string): string => {
-    return crypto.createHash("sha256").update(senha).digest("hex");
+  const hashPassword = async (senha: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(senha);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+
+    return Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
   };
 
   // Verifica autenticação ao montar
   useEffect(() => {
-    checkAuth();
+    let ignore = false;
+    const storedCPF = typeof window !== "undefined" ? localStorage.getItem("usuario_cpf") : null;
+
+    if (!storedCPF) {
+      Promise.resolve().then(() => {
+        if (!ignore) {
+          setCarregando(false);
+        }
+      });
+      return () => {
+        ignore = true;
+      };
+    }
+
+    supabase
+      .from("usuarios")
+      .select("*")
+      .eq("cpf", storedCPF)
+      .single()
+      .then(
+        ({ data, error }) => {
+          if (!ignore) {
+            setCpf(storedCPF);
+            if (!error && data) {
+              setUsuarioLogado(data as User);
+            }
+            setCarregando(false);
+          }
+        },
+        (error: unknown) => {
+          if (!ignore) {
+            console.error("Erro ao carregar usuário:", error);
+            setCarregando(false);
+          }
+        }
+      );
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
-  async function checkAuth() {
-    try {
-      const storedCPF = localStorage.getItem("usuario_cpf");
-      if (storedCPF) {
-        setCpf(storedCPF);
-        await carregarUsuario(storedCPF);
-      }
-    } catch (error) {
-      console.error("Erro ao verificar autenticação:", error);
-    } finally {
-      setCarregando(false);
-    }
-  }
-
-  async function carregarUsuario(userCPF: string) {
-    try {
-      const { data, error } = await supabase
-        .from("usuarios")
-        .select("*")
-        .eq("cpf", userCPF)
-        .single();
-
-      if (!error && data) {
-        setUsuarioLogado(data as User);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar usuário:", error);
-    }
-  }
-
   async function login(cpfLogin: string, senha: string) {
-    // Query o usuário pela CPF
     const { data: usuario, error } = await supabase
       .from("usuarios")
       .select("*")
@@ -72,15 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("CPF não encontrado");
     }
 
-    // Hash a senha enviada
-    const senhaHash = hashPassword(senha);
+    const senhaHash = await hashPassword(senha);
 
-    // Compara com a senha armazenada
     if (usuario.senha !== senhaHash) {
       throw new Error("Senha incorreta");
     }
 
-    // Autenticação bem-sucedida
     localStorage.setItem("usuario_cpf", cpfLogin);
     setCpf(cpfLogin);
     setUsuarioLogado(usuario as User);
@@ -93,10 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function registrar(cpf: string, nome: string, emailRegistro: string, senha: string) {
-    // Hash da senha
-    const senhaHash = hashPassword(senha);
+    const senhaHash = await hashPassword(senha);
 
-    // Cria o registro na tabela usuarios com a senha hashada
     const { error: dbError } = await supabase.from("usuarios").insert({
       cpf: cpf,
       nome: nome.trim(),

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/lib/authContext";
 
 export default function LoginForm() {
@@ -59,8 +58,8 @@ export default function LoginForm() {
 
       await login(cpf.replace(/\D/g, ""), senha);
       router.push("/leads");
-    } catch (err: any) {
-      setErro(err.message || "Erro ao fazer login");
+    } catch (err: unknown) {
+      setErro(err instanceof Error ? err.message : "Erro ao fazer login");
       setCarregando(false);
     }
   }
@@ -112,8 +111,8 @@ export default function LoginForm() {
       setNome("");
       setErro(null);
       setCarregando(false);
-    } catch (err: any) {
-      setErro(err.message || "Erro ao registrar");
+    } catch (err: unknown) {
+      setErro(err instanceof Error ? err.message : "Erro ao registrar");
       setCarregando(false);
     }
   }

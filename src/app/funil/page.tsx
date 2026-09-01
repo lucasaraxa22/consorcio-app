@@ -22,7 +22,6 @@ export default function FunnelPage() {
   const [carregando, setCarregando] = useState(true);
 
   const carregarLeads = useCallback(async () => {
-    setCarregando(true);
     const { data, error } = await supabase
       .from("leads")
       .select("*")
@@ -35,8 +34,24 @@ export default function FunnelPage() {
   }, []);
 
   useEffect(() => {
-    carregarLeads();
-  }, [carregarLeads]);
+    let ignore = false;
+    supabase
+      .from("leads")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (!ignore) {
+          if (!error && data) {
+            setLeads(data as Lead[]);
+          }
+          setCarregando(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   // Agrupa os leads por status
   const leadsPorStatus: Record<LeadStatus, Lead[]> = {

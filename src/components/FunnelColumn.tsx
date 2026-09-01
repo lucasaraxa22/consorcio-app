@@ -1,6 +1,6 @@
 "use client";
 
-import { Lead, LeadStatus, LEAD_STATUS_COLORS } from "@/lib/types";
+import { Lead, LeadStatus } from "@/lib/types";
 import { supabase } from "@/lib/supabaseClient";
 
 interface FunnelColumnProps {
@@ -11,7 +11,6 @@ interface FunnelColumnProps {
 }
 
 export default function FunnelColumn({
-  status,
   statusLabel,
   leads,
   onStatusChanged,

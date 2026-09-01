@@ -9,14 +9,14 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { email, carregando } = useAuth();
+  const { cpf, carregando } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!carregando && !email) {
+    if (!carregando && !cpf) {
       router.push("/auth/login");
     }
-  }, [email, carregando, router]);
+  }, [cpf, carregando, router]);
 
   if (carregando) {
     return (
@@ -26,7 +26,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!email) {
+  if (!cpf) {
     return null;
   }
 

@@ -1,6 +1,11 @@
+"use client";
+
+import { useRequireAuth } from "@/lib/useRequireAuth";
 import SimuladorForm from "@/components/SimuladorForm";
 
 export default function SimuladorPage() {
+  useRequireAuth();
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
       <div>

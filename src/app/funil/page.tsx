@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 import { Lead, LeadStatus, LEAD_STATUS_LABELS } from "@/lib/types";
 import FunnelColumn from "@/components/FunnelColumn";
 
@@ -15,6 +16,8 @@ const STATUSES: LeadStatus[] = [
 ];
 
 export default function FunnelPage() {
+  useRequireAuth();
+
   const [leads, setLeads] = useState<Lead[]>([]);
   const [carregando, setCarregando] = useState(true);
 

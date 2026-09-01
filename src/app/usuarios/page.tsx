@@ -2,11 +2,14 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 import { User } from "@/lib/types";
 import UserForm from "@/components/UserForm";
 import UserList from "@/components/UserList";
 
 export default function UsuariosPage() {
+  useRequireAuth();
+
   const [users, setUsers] = useState<User[]>([]);
   const [carregando, setCarregando] = useState(true);
 

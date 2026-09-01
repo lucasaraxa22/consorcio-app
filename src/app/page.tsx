@@ -1,21 +1,23 @@
 "use client";
 
-import { redirect } from "next/navigation";
-import { useAuth } from "@/lib/authContext";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function Home() {
-  const { email, carregando } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    if (!carregando) {
-      if (!email) {
-        redirect("/auth/login");
+    async function checkAuth() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        router.push("/leads");
       } else {
-        redirect("/leads");
+        router.push("/auth/login");
       }
     }
-  }, [email, carregando]);
+    checkAuth();
+  }, [router]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

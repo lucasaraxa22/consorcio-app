@@ -2,11 +2,14 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 import { Lead } from "@/lib/types";
 import LeadForm from "@/components/LeadForm";
 import LeadList from "@/components/LeadList";
 
 export default function LeadsPage() {
+  useRequireAuth();
+
   const [leads, setLeads] = useState<Lead[]>([]);
   const [carregando, setCarregando] = useState(true);
 

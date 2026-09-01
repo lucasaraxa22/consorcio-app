@@ -91,10 +91,3 @@ export default function NavBar() {
     </>
   );
 }
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-    </>
-  );
-}

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/lib/authContext";
 import NavBar from "@/components/NavBar";
-import ProtectedRoute from "@/components/ProtectedRoute";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,7 +19,7 @@ export default function RootLayout({ children }: LayoutProps) {
         <AuthProvider>
           <NavBar />
           <main className="flex-1 pb-16 sm:pb-0">
-            <ProtectedRoute>{children}</ProtectedRoute>
+            {children}
           </main>
         </AuthProvider>
       </body>

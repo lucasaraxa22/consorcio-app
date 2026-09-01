@@ -40,6 +40,16 @@ export const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {
   perdido: "bg-rose-100 text-rose-700",
 };
 
+// --- Usuários ---
+
+export interface User {
+  id: string;
+  created_at: string;
+  cpf: string;
+  nome: string;
+  email: string;
+}
+
 // --- Simulador de Consórcio ---
 
 export interface Simulacao {

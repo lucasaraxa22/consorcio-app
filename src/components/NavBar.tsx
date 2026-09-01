@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const ITENS = [
   { href: "/leads", label: "Leads", icon: "👥" },
+  { href: "/usuarios", label: "Usuários", icon: "👤" },
   { href: "/simulador", label: "Simulador", icon: "🧮" },
   { href: "/funil", label: "Funil", icon: "📊" },
 ];

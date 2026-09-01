@@ -6,8 +6,7 @@ import { usePathname } from "next/navigation";
 const ITENS = [
   { href: "/leads", label: "Leads", icon: "👥" },
   { href: "/simulador", label: "Simulador", icon: "🧮" },
-  // Próximos módulos entram aqui, seguindo o mesmo padrão:
-  // { href: "/funil", label: "Funil", icon: "📊" },
+  { href: "/funil", label: "Funil", icon: "📊" },
 ];
 
 export default function NavBar() {

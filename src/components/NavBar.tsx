@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 
 const ITENS = [
   { href: "/leads", label: "Leads", icon: "👥" },
+  { href: "/simulador", label: "Simulador", icon: "🧮" },
   // Próximos módulos entram aqui, seguindo o mesmo padrão:
-  // { href: "/simulador", label: "Simulador", icon: "🧮" },
   // { href: "/funil", label: "Funil", icon: "📊" },
 ];
 

@@ -39,3 +39,19 @@ export const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {
   fechado: "bg-emerald-100 text-emerald-700",
   perdido: "bg-rose-100 text-rose-700",
 };
+
+// --- Simulador de Consórcio ---
+
+export interface Simulacao {
+  id: string;
+  created_at: string;
+  lead_id: string | null;
+  valor_credito: number;
+  prazo_meses: number;
+  taxa_admin: number;
+  fundo_reserva: number;
+  percentual_lance: number;
+  parcela_sem_lance: number;
+  parcela_com_lance: number | null;
+  observacoes: string | null;
+}
